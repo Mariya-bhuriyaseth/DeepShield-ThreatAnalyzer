@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — DeepShield</title>
+  <meta name="description" content="View and manage your DeepShield scan history, saved locally on this device.">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg ds-navbar">
+    <div class="container">
+      <a class="navbar-brand ds-brand" href="index.html">
+        <span class="ds-brand-icon"><i class="bi bi-shield-check"></i></span>
+        DeepShield
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" style="border-color: var(--border); color: var(--text);">
+        <i class="bi bi-list" style="color: var(--text); font-size: 1.4rem;"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navMain">
+        <ul class="navbar-nav ms-auto align-items-lg-center gap-1">
+          <li class="nav-item"><a class="nav-link ds-nav-link" href="index.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link ds-nav-link" href="analyzer.html">Analyzer</a></li>
+          <li class="nav-item"><a class="nav-link ds-nav-link active" href="dashboard.html">Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link ds-nav-link" href="about.html">About</a></li>
+          <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+            <a class="nav-link ds-nav-cta" href="analyzer.html"><i class="bi bi-radar"></i> Scan Now</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="py-5">
+      <div class="container">
+
+        <div class="d-flex flex-wrap justify-content-between align-items-end gap-3 mb-2">
+          <div>
+            <div class="eyebrow mb-2">Scan history</div>
+            <h1 class="fw-bold mb-0">Dashboard</h1>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn-ds-outline" id="refreshBtn"><i class="bi bi-arrow-clockwise me-2"></i>Refresh</button>
+            <button class="btn-ds-danger" id="clearAllBtn"><i class="bi bi-trash3 me-2"></i>Clear all</button>
+          </div>
+        </div>
+        <p class="small text-muted-soft mb-4"><i class="bi bi-info-circle me-1"></i>This history is saved locally in your browser on this device only — it won't appear on other devices or browsers.</p>
+
+        <!-- Stat cards -->
+        <div class="row g-3 mb-4">
+          <div class="col-6 col-lg-3">
+            <div class="ds-stat-card">
+              <div class="ds-stat-value" id="statTotal" style="color: var(--text);">0</div>
+              <div class="ds-stat-label">Total scans</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="ds-stat-card">
+              <div class="ds-stat-value" id="statLow" style="color: var(--safe);">0</div>
+              <div class="ds-stat-label">Low risk</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="ds-stat-card">
+              <div class="ds-stat-value" id="statModerate" style="color: var(--moderate);">0</div>
+              <div class="ds-stat-label">Moderate risk</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="ds-stat-card">
+              <div class="ds-stat-value" id="statDangerous" style="color: var(--critical);">0</div>
+              <div class="ds-stat-label">High / critical risk</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4">
+          <!-- Chart -->
+          <div class="col-lg-4">
+            <div class="ds-card ds-card-pad h-100">
+              <div class="ds-section-label"><i class="bi bi-pie-chart"></i> Risk distribution</div>
+              <canvas id="riskChart" height="220"></canvas>
+              <div id="chartEmptyState" class="ds-empty-state d-none py-4">
+                <i class="bi bi-bar-chart"></i>
+                <p class="mb-0 small">Run a scan to see your distribution here.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- History table -->
+          <div class="col-lg-8">
+            <div class="ds-card">
+              <div class="ds-card-pad pb-3 d-flex flex-wrap gap-3 justify-content-between align-items-center">
+                <div class="ds-section-label mb-0"><i class="bi bi-clock-history"></i> History</div>
+                <div class="d-flex gap-2">
+                  <select id="filterType" class="form-select ds-form-control" style="width: auto;">
+                    <option value="all">All types</option>
+                    <option value="url">Links</option>
+                    <option value="text">Messages</option>
+                    <option value="qr">QR codes</option>
+                  </select>
+                  <input type="text" id="searchInput" class="form-control ds-form-control" placeholder="Search history..." style="width: 200px;">
+                </div>
+              </div>
+
+              <div class="table-responsive" style="max-height: 560px;">
+                <table class="table ds-table align-middle">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Type</th>
+                      <th>Input</th>
+                      <th>Score</th>
+                      <th>Risk</th>
+                      <th class="text-end">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="historyTableBody"></tbody>
+                </table>
+              </div>
+
+              <div id="emptyState" class="ds-empty-state d-none">
+                <i class="bi bi-inbox"></i>
+                <p class="mb-2">No scans yet.</p>
+                <a href="analyzer.html" class="btn-ds-primary"><i class="bi bi-radar me-2"></i>Run your first scan</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Details modal -->
+  <div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Scan details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="detailsModalBody"></div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ds-outline" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clear-all confirm modal -->
+  <div class="modal fade" id="clearConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title fw-bold">Clear all history?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-0 text-muted-soft">This will permanently delete all scan records saved in this browser. This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-ds-outline" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-ds-danger" id="confirmClearBtn"><i class="bi bi-trash3 me-2"></i>Delete everything</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="ds-footer">
+    <div class="container">
+      <div class="row gy-4">
+        <div class="col-lg-4">
+          <div class="ds-brand mb-2"><span class="ds-brand-icon"><i class="bi bi-shield-check"></i></span> DeepShield</div>
+          <p class="text-muted-soft small mb-0">A browser-based detection tool for scam links, phishing messages, and fraudulent QR codes.</p>
+        </div>
+        <div class="col-lg-2 col-6">
+          <div class="eyebrow mb-2">Product</div>
+          <ul class="list-unstyled small d-flex flex-column gap-2">
+            <li><a href="index.html" class="text-muted-soft">Home</a></li>
+            <li><a href="analyzer.html" class="text-muted-soft">Analyzer</a></li>
+            <li><a href="dashboard.html" class="text-muted-soft">Dashboard</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-2 col-6">
+          <div class="eyebrow mb-2">Project</div>
+          <ul class="list-unstyled small d-flex flex-column gap-2">
+            <li><a href="about.html" class="text-muted-soft">About</a></li>
+          </ul>
+        </div>
+        <div class="col-lg-4">
+          <div class="eyebrow mb-2">Disclaimer</div>
+          <p class="text-muted-soft small mb-0">DeepShield gives a heuristic risk assessment to help you make a faster, more informed decision. It is not a guarantee of safety.</p>
+        </div>
+      </div>
+      <hr style="border-color: var(--border-soft); margin: 2rem 0 1.25rem;">
+      <p class="text-muted-soft small mb-0">© 2026 DeepShield. Runs entirely in your browser.</p>
+    </div>
+  </footer>
+
+  <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer" style="z-index: 1080;"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="js/common.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/dashboard-page.js"></script>
+</body>
+</html>
